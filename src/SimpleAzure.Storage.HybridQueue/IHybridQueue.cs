@@ -8,9 +8,9 @@ public interface IHybridQueue
     /// <typeparam name="T">Type of item.</typeparam>
     /// <param name="item">An item to add to the queue.</param>
     /// <param name="initialVisibilityDelay">How long to initially hide the message.</param>
-    /// <param name="cancellationToken">A System.Threading.CancellationToken to observe while waiting for a task to complete.</param>
-    /// <returns>A System.Threading.Tasks.Task object that represents the asynchronous operation.</returns>
-    /// <remarks>If the item is a IsPrimitive (int, etc) or a string then it's stored -as is-. Otherwise, it is serialized to Json and then stored as Json.(</remarks>
+    /// <param name="cancellationToken">A <see cref="CancellationToken" /> to observe while waiting for a task to complete.</param>
+    /// <returns>A <see cref="Task"/> object that represents the asynchronous operation.</returns>
+    /// <remarks>If the item is a <see cref="Type.IsPrimitive"/> (<see cref="int" />, etc) or a <see cref="string" /> then it's stored -as is-. Otherwise, it is serialized to Json and then stored as Json.</remarks>
     Task AddMessageAsync<T>(
         T item,
         TimeSpan? initialVisibilityDelay = null,
@@ -23,9 +23,9 @@ public interface IHybridQueue
     /// <param name="contents">Collection of content to add to the queue.</param>
     /// <param name="initialVisibilityDelay">How long to initially hide the message.</param>
     /// <param name="batchSize">Number of messages per batch, to store as one parallel execution.</param>
-    /// <param name="cancellationToken">A System.Threading.CancellationToken to observe while waiting for a task to complete.</param>
-    /// <returns>A System.Threading.Tasks.Task object that represents the asynchronous operation.</returns>
-    /// <remarks>If any item is a IsPrimitive (int, etc) or a string then it's stored -as is-. Otherwise, it is serialized to Json and then stored as Json.(</remarks>
+    /// <param name="cancellationToken">A <see cref="CancellationToken" /> to observe while waiting for a task to complete.</param>
+    /// <returns>A <see cref="Task"/> object that represents the asynchronous operation.</returns>
+    /// <remarks>If any item is a <see cref="Type.IsPrimitive"/> (<see cref="int" />, etc) or a <see cref="string" /> then it's stored -as is-. Otherwise, it is serialized to Json and then stored as Json.</remarks>
     Task AddMessagesAsync<T>(
         IEnumerable<T> contents,
         TimeSpan? initialVisibilityDelay = null,
@@ -36,29 +36,30 @@ public interface IHybridQueue
     /// Initiates an asynchronous operation to delete a message from the queue and if required, the linked blob.
     /// </summary>
     /// <param name="hybridMessage">Hybrid message which we will need to delete.</param>
-    /// <param name="cancellationToken">A System.Threading.CancellationToken to observe while waiting for a task to complete.</param>
-    /// <returns>A System.Threading.Tasks.Task object that represents the asynchronous operation.</returns>
+    /// <param name="cancellationToken">A <see cref="CancellationToken" /> to observe while waiting for a task to complete.</param>
+    /// <returns>A <see cref="Task"/> object that represents the asynchronous operation.</returns>
     Task DeleteMessageAsync<T>(HybridMessage<T> hybridMessage, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a message from a queue and wraps it in a simple Message class.
     /// </summary>
     /// <typeparam name="T">Type of item.</typeparam>
-    /// <param name="visibilityTimeout">A System.TimeSpan specifying the visibility timeout interval.</param>
-    /// <param name="cancellationToken">A System.Threading.CancellationToken to observe while waiting for a task to complete.</param>
-    /// <returns>A System.Threading.Tasks.Task object that represents the asynchronous operation.</returns>
-    /// <remarks>The content of the message will attempt to be deserialized from Json. If the message is a Primitive type or a string, then the Json deserialization will be still run but no error should occur.</remarks>
+    /// <param name="visibilityTimeout">A <see cref="TimeSpan"/> specifying the visibility timeout interval.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken" /> to observe while waiting for a task to complete.</param>
+    /// <returns>A <see cref="Task"/> object that represents the asynchronous operation.</returns>
+    /// <remarks>The content of the message will attempt to be deserialized from Json. If the message is a Primitive type or a <see cref="string" />, then the Json deserialization will be still run but no error should occur.</remarks>
     Task<HybridMessage<T?>> GetMessageAsync<T>(TimeSpan? visibilityTimeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a collection of messages from a queue and wraps each one in a simple Message class.
     /// </summary>
     /// <typeparam name="T">Type of item.</typeparam>
-    /// <param name="messageCount">The number of messages to retrieve from the queue.</param>
-    /// <param name="visibilityTimeout">A System.TimeSpan specifying the visibility timeout interval.</param>
-    /// <param name="cancellationToken">A System.Threading.CancellationToken to observe while waiting for a task to complete.</param>
-    /// <returns>A System.Threading.Tasks.Task object that represents the asynchronous operation.</returns>
-    /// <remarks>The content of the message will attempt to be deserialized from Json. If the message is a Primitive type or a string, then the Json deserialization will be still run but no error should occur.</remarks>
+    /// <param name="messageCount">The number of messages to retrieve from the queue. Maximum value of 32</param>
+    /// <param name="visibilityTimeout">A <see cref="TimeSpan"/> specifying the visibility timeout interval.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken" /> to observe while waiting for a task to complete.</param>
+    /// <returns>A <see cref="Task"/> object that represents the asynchronous operation.</returns>
+    /// <remarks>The content of the message will attempt to be deserialized from Json. If the message is a Primitive type or a <see cref="string" />, then the Json deserialization will be still run but no error should occur.</remarks>
+    
     Task<IEnumerable<HybridMessage<T>>> GetMessagesAsync<T>(
         int maxMessages = 32,
         TimeSpan? visibilityTimeout = null,

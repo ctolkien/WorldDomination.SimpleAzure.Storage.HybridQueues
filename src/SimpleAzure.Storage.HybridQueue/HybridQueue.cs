@@ -7,14 +7,13 @@ using Microsoft.Extensions.Logging;
 
 namespace WorldDomination.SimpleAzure.Storage.HybridQueues;
 
+/// <inheritdoc />
 public class HybridQueue : IHybridQueue
-
 {
     private readonly QueueClient _queueClient;
     private readonly BlobContainerClient _blobContainerClient;
     private readonly ILogger<HybridQueue> _logger;
 
-    /// <inheritdoc />
     public HybridQueue(QueueClient queueClient, BlobContainerClient blobContainerClient, ILogger<HybridQueue> logger)
     {
         _queueClient = queueClient;
@@ -22,7 +21,6 @@ public class HybridQueue : IHybridQueue
         _logger = logger;
     }
 
-    /// <inheritdoc />
     public async Task AddMessageAsync<T>(T item, TimeSpan? initialVisibilityDelay = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(item);
@@ -36,17 +34,17 @@ public class HybridQueue : IHybridQueue
         // Don't waste effort serializing a string. It's already in a format that's ready to go.
         if (typeof(T).IsASimpleType())
         {
-            if (item is string)
+            if (item is string itemString)
             {
                 _logger.LogDebug("Item is a SimpleType: string.");
 
-                message = item as string; // Note: shouldn't allocate new memory. Should just be a reference to existing memory.
+                message = itemString; // Note: shouldn't allocate new memory. Should just be a reference to existing memory.
             }
             else
             {
                 _logger.LogDebug("Item is a SimpleType: something other than a string.");
 
-                message = item.ToString();
+                message = item.ToString() ?? string.Empty;
             }
         }
         else
@@ -87,7 +85,6 @@ public class HybridQueue : IHybridQueue
         _logger.LogDebug("Finished adding an Item to the queue.");
     }
 
-    /// <inheritdoc />
     public async Task AddMessagesAsync<T>(
         IEnumerable<T> contents,
         TimeSpan? initialVisibilityDelay = null,
@@ -120,8 +117,7 @@ public class HybridQueue : IHybridQueue
         }
     }
 
-    /// <inheritdoc />
-    public async Task DeleteMessageAsync<T>(HybridMessage<T> hybridMessage, CancellationToken cancellationToken = default)
+     public async Task DeleteMessageAsync<T>(HybridMessage<T> hybridMessage, CancellationToken cancellationToken = default)
     {
         using var _ = _logger.BeginCustomScope(
             (nameof(hybridMessage.MessageId), hybridMessage.MessageId),
@@ -151,7 +147,8 @@ public class HybridQueue : IHybridQueue
     }
 
     /// <inheritdoc />
-    public async Task<HybridMessage<T?>> GetMessageAsync<T>(TimeSpan? visibilityTimeout = null, CancellationToken cancellationToken = default)
+    /// <exception cref="InvalidOperationException">Thrown when the number of messages received is greater than 1.</exception>
+    public async Task<HybridMessage<T>?> GetMessageAsync<T>(TimeSpan? visibilityTimeout = null, CancellationToken cancellationToken = default)
     {
         var messages = await GetMessagesAsync<T>(1, visibilityTimeout, cancellationToken);
 
@@ -169,14 +166,14 @@ public class HybridQueue : IHybridQueue
     }
 
     /// <inheritdoc />
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="messageCount"/> is less than 1 or greater than 32.</exception>
     public async Task<IEnumerable<HybridMessage<T>>> GetMessagesAsync<T>(
         int maxMessages = 32,
         TimeSpan? visibilityTimeout = null,
         CancellationToken cancellationToken = default)
     {
         // Note: Why 32? That's the limit for Azure to pop at once.
-        if (maxMessages < 1 ||
-            maxMessages > 32)
+        if (maxMessages is < 1 or > 32)
         {
             throw new ArgumentOutOfRangeException(nameof(maxMessages));
         }
@@ -246,7 +243,6 @@ public class HybridQueue : IHybridQueue
         else
         {
             // Complex type, so lets assume it was serialized as Json ... so now we deserialize it.
-
             _logger.LogDebug("Retreiving a complex item: assumed as json so deserializing it.");
 
             var item = JsonSerializer.Deserialize<T>(message)!;
